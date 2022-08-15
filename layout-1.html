@@ -1,0 +1,204 @@
+
+	<div id="tb" >
+		<div>
+			<br>
+			<a href="#" class="easyui-linkbutton" id="openAdd" data-options="plain:'true',iconCls:'icon-add'">添加用户</a>
+			<a href="#" class="easyui-linkbutton" data-options="plain:'true',iconCls:'icon-cut'" >修改用户</a>
+			<a href="#" id="btn3" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-remove'">删除用户</a>
+		<br><br>
+		</div>
+		
+		<div >
+			用户名：<input type="text" size="20" id="s_userName"  />
+			<a href="javascript:searchUser()" class="easyui-linkbutton"  data-options="plain:true,iconCls:'icon-search'">查询</a>
+			
+		</div> 
+
+<br>
+	</div>
+	
+
+<div id="dlg" class="easyui-dialog" data-options=" closed:'true', iconCls:'icon-save',buttons:'#dlg-buttons',toolbar:'#dlg-toolbar'"
+	style="  width: 500px;height: 200px; padding: 10px;">
+	</div>
+	<div id="dlg-toolbar" style="padding:2px 0;">
+		<form id="fm" method="post">
+			<table cellspacing="8px" align="center">
+				<tr>
+					<td >用户名:</td>
+					<td><input type="text" id="username" name="username" class="wu-text" /></td>
+					<td>&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+				<tr>
+					<td  >密&nbsp;&nbsp;码:</td>
+					<td> <input class="easyui-passwordbox"  iconWidth="28"
+                          style="width:170px;height:25px;padding:10px"></td>
+					
+				</tr>
+				<tr>
+					<td >性别:</td>
+		
+					<td>
+						<select id="sex" class="easyui-combobox" name="dept" style="width:80px;">
+							<option value="aa">男</option>
+							<option>女</option>
+		
+		
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td >出生日期:</td>
+					<td><input id="birthday" type="text" class="easyui-datebox"
+							data-options="editable:false,currentText:'今天',closeText:'关闭'"></td>
+				</tr>
+				<tr>
+					<td >电子邮件:</td>
+					<td><input type="text" name="email" id="email" class="wu-text" /></td>
+				</tr>
+				<tr>
+					<td >收货地址:</td>
+					<td><input type="text" id="address" name="address" class="wu-text" /></td>
+				</tr>
+		
+		
+			</table>
+			
+		
+		</form>
+		<div id="dlg-buttons">
+			<a href="javascript:saveUser();" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" >保存</a>
+			<a href="#" class="easyui-linkbutton"  data-options="iconCls:'icon-cancel'" id="close">取消</a>
+		</div>
+	</div>
+	<!-- 连接数据库 数据网格 -->
+	<table id="dg" class="easyui-datagrid"  pagination="true" rownumbers="true"
+    url="/mysqldemo/user" fit="true" toolbar="#tb" >
+		
+	</table>
+
+
+
+<script type="text/javascript">
+// 用户信息table 用于连接数据库
+	function pagerFilter(data) {
+		    if (typeof data.length == 'number' && typeof data.splice == 'function') { // is array
+		        data = {
+		            total: data.length,
+		            rows: data
+		        }
+		    }
+		    var dg = $(this);
+		    var opts = dg.datagrid('options');
+		    var pager = dg.datagrid('getPager');
+		    pager.pagination({
+		       
+		        onSelectPage: function(pageNum, pageSize) {
+		            opts.pageNumber = pageNum;
+		            opts.pageSize = pageSize;
+		            pager.pagination('refresh', {
+		                pageNumber: pageNum,
+		                pageSize: pageSize
+		            });
+		            dg.datagrid('loadData', data);
+		        }
+		    });
+		    if (!data.originalRows) {
+		        data.originalRows = (data.rows);
+		    }
+		    var start = (opts.pageNumber - 1) * parseInt(opts.pageSize);
+		    var end = start + parseInt(opts.pageSize);
+		    data.rows = (data.originalRows.slice(start, end));
+		    return data;
+		}
+$("#dg").datagrid({
+	           method:"get",
+			   url:'http://localhost:8000/user',
+			   loadFilter:pagerFilter,
+			   rownumbers:true,
+			   singleSelect:false,
+			   pageSize:20,
+			   pagination:true,
+			   	multiSort:true,
+				
+		 	    columns:[[
+		 			{field:'cb',checkbox:'true', align:'center'},
+		 			{field:'id',title:'编号',align:'center' ,width:'100'},
+					{field:'username',title:'用户名',align:'center' ,width:'150'},
+					{field:'sex',title:'性别',align:'center' ,width:'100'},
+					{field:'birthday',title:'出生日期',formatter:'formatEmail' ,align:'center' ,width:'150'},
+		 			{field:'email',title:'邮箱',align:'center' ,width:'150'},
+					{field:'address',title:'收货地址',width:'150',align:'center'}
+					
+		 	    ]]
+		 	});
+	
+	// 添加数据按钮事件
+	$("#openAdd").click(function() {
+		$("#dlg").dialog({
+			
+			title: '添加信息',
+			closed: false,
+			cache: true,
+			// href: 'get_content.php',
+			modal: true,
+
+
+		})
+	});
+
+// 对话框中取消按钮 关闭对话框
+$("#close").click(function(){
+	  $('#dlg').dialog('close');
+	  $("#fm").form("reset");
+} );
+// 对话框保存事件
+var url;
+	function saveUser() {
+		$('#fm').form('submit', {
+			url:url,
+			 onSubmit: function() {
+					if ($("#username").val() == "") {
+						$.messager.alert("系统提示", "请填写用户名");
+						return false;
+					}
+					if ($("#password").val() == "") {
+						$.messager.alert("系统提示", "请填写密码");
+						return false;
+					}
+					if ($("#sex").combobox("getValue") == "") {
+						$.messager.alert("系统提示", "请选择性别");
+						return false;
+					}
+					if ($("#birthday").datebox("getValue") == "") {
+						$.messager.alert("系统提示", "请选择出生日期");
+						return false;
+					}
+					if ($("#email").val() == "") {
+						$.messager.alert("系统提示", "请输入您的邮箱");
+						return false;
+				 }
+					if ($("#address").val() == "") {
+						$.messager.alert("系统提示", "请输入您的住址");
+						return false;
+					}
+					return $(this).form("validate")
+				},
+			success: function(result) {
+				console.log(result);
+				if (rsult.success) {
+					$.messager.alert('系统提示', '保存成功！');
+					$("#fm").form("reset");
+					$('#dlg').dialog('close');
+				} else {
+					$.messager.alert('系统提示', '保存失败！');
+					result;
+				}
+			}
+		})
+	}; 
+ function openModifyPassDlg(){
+        $("#fm").form("reset");
+        $("#dlg").dialog("open").dialog("setTitle","修改密码");
+    }
+</script>
